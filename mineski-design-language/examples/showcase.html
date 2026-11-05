@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Component Showcase · Mineski</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
+  <script>try { var t = JSON.parse(localStorage.getItem("showcase.theme")); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
+  <link rel="stylesheet" id="themeCss" href="../assets/themes/slot-teal.css">
+  <link rel="stylesheet" href="../assets/mineski-base.css">
+  <style>
+    /* showcase-only layout */
+    .sc-sec { margin-top: 34px; }
+    .sc-sec > h2 { font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .sc-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .sc-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+    .sw div { border-radius: 12px; border: 1px solid var(--line); overflow: hidden; background: var(--surface); font-size: 11.5px; }
+    .sw i { display: block; height: 46px; }
+    .sw span { display: block; padding: 6px 8px; font-weight: 700; }
+    .type-demo > * + * { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="#"><img class="brand-mark" src="../templates/starter/img/tool-icon.svg" alt="" width="34" height="34"><span class="brand-name">Showcase</span><span class="env">Test copy</span></a>
+    <div class="top-right">
+      <label class="select"><span class="sr-only">Theme</span>
+        <select id="themePick">
+          <option value="slot-teal">Teal slot</option>
+          <option value="slot-tangerine">Tangerine slot</option>
+          <option value="fetch">Fetch</option>
+          <option value="polaris">Polaris</option>
+          <option value="suppliers">Suppliers</option>
+        </select>
+      </label>
+      <a class="session-pill" href="#"><span class="i" data-icon="clock"></span>1h 42m</a>
+      <span class="avatar avatar-initials">SL</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div><h1>Component showcase</h1><p class="lede sm">Every part of mineski-base.css, in the selected theme. Switch themes and modes to compare.</p></div>
+      <div class="seg" id="modeSeg" role="radiogroup" aria-label="Appearance">
+        <button type="button" role="radio" data-theme-choice="system"><span class="i" data-icon="monitor"></span> System</button>
+        <button type="button" role="radio" data-theme-choice="light"><span class="i" data-icon="sun"></span> Light</button>
+        <button type="button" role="radio" data-theme-choice="dark"><span class="i" data-icon="moon"></span> Dark</button>
+      </div>
+    </div>
+
+    <section class="sc-sec"><h2>Tokens</h2>
+      <div class="sw" id="swatches"></div>
+    </section>
+
+    <section class="sc-sec"><h2>Type</h2>
+      <div class="card card-pad type-demo">
+        <p style="font-size:clamp(30px,5vw,38px);font-weight:800;letter-spacing:-.035em;line-height:1.1">Login title 38/800</p>
+        <p style="font-size:clamp(26px,3.4vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1.15">Page title 34/800</p>
+        <p style="font-size:20px;font-weight:800;letter-spacing:-.02em">Dialog title 20/800</p>
+        <p style="font-size:17px;font-weight:750;letter-spacing:-.01em">Card title 16–17/700–750</p>
+        <p>Body 15/1.5 regular. Short, plain sentences, written like a helpful colleague.</p>
+        <p class="hint">Meta and hints 13–13.5, muted</p>
+        <p class="subhead">Section label 11.5 / 800 / uppercase</p>
+        <p class="num" style="font-weight:800;font-size:18px">₱1,250,000.00 · 12 of 340 (tabular figures)</p>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Buttons</h2>
+      <div class="sc-row">
+        <button class="btn btn-primary"><span class="i" data-icon="save"></span> <span class="label">Save to Lark</span></button>
+        <button class="btn"><span class="i" data-icon="download"></span> Download PDF</button>
+        <button class="btn btn-tonal">Push</button>
+        <button class="btn btn-ghost">Ignore</button>
+        <button class="btn btn-danger">Delete…</button>
+        <button class="btn btn-primary" disabled>Disabled</button>
+        <button class="btn btn-primary is-busy" id="busyDemo"><span class="i" data-icon="save"></span> <span class="label">Saving…</span></button>
+        <button class="btn is-done"><span class="i" data-icon="check"></span> Copied</button>
+      </div>
+      <div class="sc-row" style="margin-top:12px">
+        <button class="btn btn-primary btn-lg"><span class="i" data-icon="sparkles"></span> Extract brief</button>
+        <button class="btn btn-sm">Small</button>
+        <button class="icon-btn" aria-label="Refresh"><span class="i" data-icon="refresh"></span></button>
+        <button class="icon-btn is-busy" aria-label="Refreshing"><span class="i" data-icon="refresh"></span></button>
+        <button class="icon-btn icon-sm" aria-label="Edit"><span class="i" data-icon="pencil"></span></button>
+        <button class="linkish">Open Settings <span class="i" data-icon="arrowRight"></span></button>
+        <button class="btn has-badge" id="copyDemo"><span class="i" data-icon="chat"></span> Copy for group chat</button>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Navigation</h2>
+      <div class="sc-row">
+        <nav class="nav"><a href="#" aria-current="page">New brief</a><a href="#">All briefs <span class="count">12</span></a><a href="#" class="nav-icon" aria-label="Settings"><span class="i" data-icon="gear"></span></a></nav>
+        <a class="back" href="#"><span class="i" data-icon="arrowLeft"></span> All briefs</a>
+      </div>
+      <nav class="tabs" style="position:static;margin-top:12px;max-width:760px">
+        <a class="tab" href="#" aria-selected="true">Briefs <span class="count">4</span></a>
+        <a class="tab" href="#" aria-selected="false">PARs <span class="count">2</span></a>
+        <a class="tab" href="#" aria-selected="false">Invoices <span class="count">7</span></a>
+      </nav>
+    </section>
+
+    <section class="sc-sec"><h2>Fields</h2>
+      <div class="sc-grid2">
+        <div class="card card-pad stack">
+          <label class="field"><span>Client <em>(optional)</em></span><input type="text" placeholder="e.g. Acme Gaming"></label>
+          <label class="field"><span>Invoice number</span><input type="text" value="INV-16" aria-invalid="true"><small>That doesn't look like an invoice number (INV-1680).</small></label>
+          <div class="field"><span class="field-label">Requirement type</span>
+            <div class="chips" role="radiogroup"><button class="chip-opt" role="radio" aria-checked="true">RFP</button><button class="chip-opt" role="radio" aria-checked="false">RFQ</button><button class="chip-opt" role="radio" aria-checked="false">RFI</button></div>
+            <p class="hint">Note: the brief asks for a proposal and a quotation.</p>
+          </div>
+        </div>
+        <div class="card card-pad stack">
+          <label class="search"><span class="i" data-icon="search"></span><input type="search" placeholder="Search client, project…"></label>
+          <label class="select"><select><option>Newest first</option><option>Due soonest</option></select></label>
+          <div class="picker"><div class="picker-box"><span class="chip">Ana Reyes<button aria-label="Remove"><span class="i" data-icon="x"></span></button></span><input type="text" placeholder="Add a BD…"></div></div>
+          <textarea placeholder="…or type / paste the brief here."></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Badges and identifiers</h2>
+      <div class="sc-row">
+        <span class="badge badge-brand">New</span><span class="badge badge-info">In progress</span><span class="badge badge-violet">Submitted</span>
+        <span class="badge badge-ok">Won</span><span class="badge badge-muted">Lost</span><span class="badge badge-warn"><span class="i" data-icon="clock"></span>Due Oct 16 · in 2 days</span>
+        <span class="badge badge-urgent"><span class="i" data-icon="clock"></span>Due today</span><span class="badge badge-err">Rejected</span>
+        <button class="code">2026TEG-P0155</button><button class="copy">202608240082</button>
+        <span class="pill is-ok">Using the shared key</span><span class="pill is-warn">Key needed</span>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Callouts</h2>
+      <div class="stack">
+        <div class="callout callout-err"><span class="i" data-icon="alert"></span><div><p><b>Fetch can't reach its extraction service.</b> An ad blocker or privacy extension is probably blocking it.</p><p>Allow <code>gemini-pdf.onrender.com</code> in your blocker, then reload.</p></div><button class="btn btn-sm">Reload</button></div>
+        <a class="callout callout-warn" href="#"><span class="i" data-icon="alert"></span><div><b>Setup needed:</b> add your Gemini API key to start extracting briefs.</div><span class="go">Open Settings <span class="i" data-icon="arrowRight"></span></span></a>
+        <div class="callout"><span class="i" data-icon="clock"></span><div>You have an unsaved brief: <b>Booth design for the expo</b></div><button class="btn btn-sm btn-primary">Open it</button><button class="btn btn-sm btn-ghost">Discard</button></div>
+        <div class="callout callout-info"><span class="i" data-icon="info"></span><div>Polaris is connected to the test copy tables.</div></div>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Records: work items and record cards</h2>
+      <div class="sc-grid2">
+        <div class="cards">
+          <article class="card item">
+            <div class="item-head"><button class="code">2026TEG-P0155</button><span class="badge badge-ok">Approved</span><span class="item-date">Oct 14, 2026</span></div>
+            <h3>Regional finals production</h3>
+            <p class="item-meta"><b>PHP 1,250,000.00</b> · AM Ana R.</p>
+            <ul class="notes"><li>Note: looks like "Regional finals" (2026TEG-P0141), already in the Universe. If it's the same project, ignore this one.</li></ul>
+            <div class="item-actions"><button class="btn btn-ghost">Ignore</button><button class="btn btn-tonal">Push</button></div>
+          </article>
+        </div>
+        <div class="rcard-wrap">
+          <a class="rcard is-new" href="#">
+            <div class="rcard-top"><span class="badge badge-brand">New</span><span class="badge badge-warn"><span class="i" data-icon="clock"></span>Due Oct 16 · in 2 days</span></div>
+            <h3>Booth design for the Manila esports expo</h3>
+            <p class="rcard-sub">Acme Gaming</p>
+            <p class="rcard-body">3 × 3 m booth, two demo stations. Brand guide attached by the client.</p>
+            <dl class="facts"><div><dt><span class="i" data-icon="calendar"></span>Event</dt><dd>Nov 2–4, 2026</dd></div><div><dt><span class="i" data-icon="coin"></span>Budget</dt><dd>PHP 500K</dd></div></dl>
+            <div class="rcard-foot">Filed Oct 14, 2026 · Stephen L.<span class="unsaved">• unsaved edits</span></div>
+          </a>
+          <button class="more-btn" aria-label="More actions" id="moreDemo"><span class="i" data-icon="dots"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Table</h2>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Project</th><th>Client</th><th>Code</th><th class="num">Amount</th><th>Filed</th></tr></thead>
+          <tbody>
+            <tr><td class="strong" data-label="">Regional finals production</td><td data-label="Client">Northwind</td><td data-label="Code"><button class="code">2026TEG-P0155</button></td><td class="num" data-label="Amount">1,250,000.00</td><td class="dim" data-label="Filed">Oct 14, 2026</td></tr>
+            <tr class="is-new"><td class="strong" data-label="">Sponsor recap deck</td><td data-label="Client">Globex</td><td data-label="Code"><button class="code">2026TEG-P0156</button></td><td class="num" data-label="Amount">80,000.00</td><td class="dim" data-label="Filed">Oct 12, 2026</td></tr>
+            <tr><td class="strong" data-label="">Venue walkthrough</td><td data-label="Client"><span class="none">None</span></td><td data-label="Code"></td><td class="num" data-label="Amount">-</td><td class="dim" data-label="Filed">Oct 2, 2026</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Loading and empty</h2>
+      <div class="sc-grid2">
+        <div class="loader">
+          <div class="loader-title"><span class="spinner"></span>Reading the tables…</div>
+          <ul class="stages">
+            <li class="done"><span class="i" data-icon="check"></span>Universe<span class="n">1,204 of 1,204</span></li>
+            <li class="current"><span class="spinner"></span>Project Briefs<span class="n">300 of 812</span></li>
+            <li><span class="slot"></span>Collections<span class="n"></span></li>
+          </ul>
+        </div>
+        <div class="loader">
+          <div class="loader-title"><span class="spinner"></span>Waking up the connection…</div>
+          <p class="loader-sub">It sleeps when nobody's using it. This can take up to a minute.</p>
+        </div>
+        <div class="rcard is-skeleton"><span class="sk sk-chip"></span><span class="sk sk-title"></span><span class="sk sk-line"></span><span class="sk sk-line short"></span></div>
+        <div class="card"><div class="empty"><div class="empty-art"><span class="i" data-icon="inbox"></span></div><h2>No briefs yet</h2><p>Extract your first brief and save it. It'll show up here for the whole team.</p><a class="btn btn-primary" href="#"><span class="i" data-icon="sparkles"></span> Extract a brief</a></div></div>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Settings parts</h2>
+      <div class="settings">
+        <section class="card set-card">
+          <div class="set-head"><div><h2>Gemini API key</h2><p class="set-sub">Optional. Fetch uses the shared key unless you add your own.</p></div><span class="pill is-ok">Using the shared key</span></div>
+          <ul class="status-list">
+            <li><span class="dot is-ok"></span><span class="status-text"><b>Extraction service</b><span>Awake</span></span><button class="btn btn-sm">Wake up</button></li>
+            <li><span class="dot is-warn"></span><span class="status-text"><b>Lark proxy</b><span>Waking up… This can take up to a minute.</span></span><button class="btn btn-sm">Wake up</button></li>
+            <li><span class="dot is-err"></span><span class="status-text"><b>Lark Base</b><span>Unreachable (no answer for 3 minutes)</span></span><button class="btn btn-sm">Try again</button></li>
+          </ul>
+          <details class="advanced"><summary>Advanced: service addresses</summary><label class="field"><span>Proxy URL</span><input type="url" placeholder="https://lark-proxy.onrender.com"></label></details>
+        </section>
+      </div>
+    </section>
+
+    <section class="sc-sec"><h2>Feedback</h2>
+      <div class="sc-row">
+        <button class="btn" id="t1">Success toast</button>
+        <button class="btn" id="t2">Toast with Undo</button>
+        <button class="btn" id="t3">Error toast (stays)</button>
+        <button class="btn" id="m1">Confirm sheet</button>
+        <button class="btn btn-danger" id="m2">Two-step delete</button>
+      </div>
+    </section>
+  </main>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script type="module">
+    import { $, h, fillIcons, toast, popBadge, openMenu, confirmSheet, confirmDanger, initTheme, store, recall, sleep } from "../assets/ui.js";
+    fillIcons();
+    initTheme($("#modeSeg"), "showcase.theme");
+    const pick = $("#themePick");
+    pick.value = recall("local", "showcase.brand") || "slot-teal";
+    const apply = () => { $("#themeCss").href = `../assets/themes/${pick.value}.css`; store("local", "showcase.brand", pick.value); setTimeout(paint, 80); };
+    pick.addEventListener("change", apply);
+    apply();
+    function paint() {
+      const cs = getComputedStyle(document.documentElement);
+      const names = ["brand", "brand-soft", "on-brand-soft", "brand-text", "bg", "surface", "surface-2", "ink", "ink-2", "muted", "line", "line-2", "ok", "warn", "danger", "info"];
+      $("#swatches").replaceChildren(...names.map((n) => h("div", null, h("i", { style: `background:var(--${n})` }), h("span", null, `--${n}`, h("br"), h("small", { class: "muted" }, cs.getPropertyValue(`--${n}`).trim())))));
+    }
+    new MutationObserver(() => setTimeout(paint, 30)).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    $("#copyDemo").onclick = (e) => popBadge(e.currentTarget, "Copied!");
+    $("#moreDemo").onclick = (e) => openMenu([{ label: "Open", icon: "open" }, { label: "Mark as Done", icon: "doneCircle" }, "-", { label: "Delete…", icon: "trash", danger: true }], { anchor: e.currentTarget });
+    $("#t1").onclick = () => toast("Pushed 2026TEG-P0155 to the Universe.", { type: "success", detail: "All 15 fields checked in Lark." });
+    $("#t2").onclick = () => toast("Moved to Done.", { type: "success", action: "Undo", onAction: () => toast("It's back in the list.", { type: "success" }) });
+    $("#t3").onclick = () => toast("Couldn't save to Lark.", { type: "error", detail: "Lark says your account can't edit this Base. Ask its owner for edit access.", action: "Try again" });
+    $("#m1").onclick = () => confirmSheet({ title: "Save this brief to Lark?", sub: "It'll be added as a new row in the team's briefs table.", icon: "save", confirm: "Save to Lark", busyText: "Saving…",
+      body: h("dl", { class: "summary-list" }, h("dt", null, "Project"), h("dd", null, "Regional finals"), h("dt", null, "Client"), h("dd", { class: "is-empty" }, "Not specified")),
+      run: () => sleep(1200) }).then((ok) => ok && toast("Saved to Lark.", { type: "success" }));
+    $("#m2").onclick = () => confirmDanger({ what: "Regional finals", details: [["Project", "Regional finals"], ["Client", "Northwind"], ["Filed", "Oct 14, 2026"]],
+      consequence: "This removes the brief from the Lark Base for everyone, including its attachments.", safer: "Mark it Done instead if you might need it again.",
+      run: () => sleep(1000) }).then((ok) => ok && toast("Deleted “Regional finals”.", { type: "success" }));
+  </script>
+</body>
+</html>
