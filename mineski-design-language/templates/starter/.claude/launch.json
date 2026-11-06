@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "page",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/serve.py"],
+      "port": 9126,
+      "url": "http://127.0.0.1:9126"
+    }
+  ]
+}

@@ -87,8 +87,9 @@ export const APP = { name: "Polaris", key: "polaris", version: "1.0.0", env: "li
 export const ENV_LABEL = APP.env === "test" ? "Test copy" : "";        // display only, never a gate
 
 export const SERVICES = {                                               // hosted defaults
-  lark: { url: "https://lark-proxy-dwiw.onrender.com", service: "lark-cors-proxy", min: "1.0.0",
-          headers: ["Authorization"] },
+  // the shared Lark proxy runs in two places, tried in order (5.6): Cloudflare, then Render
+  lark: { urls: ["https://lark-proxy.stephen-lin.workers.dev", "https://lark-proxy-dwiw.onrender.com"],
+          service: "lark-cors-proxy", min: "2.0.0", headers: ["Authorization"] },
   // a tool proxy, if any:
   // gemini: { url: "https://gemini-pdf-6wp4.onrender.com", service: "gemini-brief-proxy", min: "1.4.0",
   //           headers: ["Authorization", "X-Gemini-Api-Key"] },
@@ -345,17 +346,19 @@ Reference: `P: js/errors.js` (`BY_CODE`, `MAPPED_CODES`, tested for coverage),
 Every proxy the tool uses is a **service** with one status object:
 
 ```js
-const lark = createService({ id: "lark", label: "Connection service", url: () => cfg().larkUrl,
-                             def: SERVICES.lark, freshMs: 60_000 });
+const lark = createService({ id: "lark", label: "Connection service", urls: () => cfg().larkUrls,
+                             def: SERVICES.lark, freshMs: 60_000 });   // one address: urls: () => [url]
 lark.status = {
   state: "unset" | "unknown" | "waking" | "awake" | "down" | "blocked" | "outdated",
   detail: "",       // the bracketed reason: "no answer for 3 minutes", "v1.3.0, needs 1.4.0"
   version: "",      // from GET /
   info: {},         // the rest of GET / (e.g. Fetch's `configured`)
   checkedAt: 0,
+  backup: false,    // using an address other than the first (5.6)
 };
 lark.on(fn);        // subscribe; returns unsubscribe
-lark.wake({ force }); lark.host(); lark.isFresh(); lark.isBlocked();
+lark.wake({ force }); lark.url(); lark.host(); lark.hosts(); lark.isFresh(); lark.isBlocked();
+lark.failover(); lark.suspect(); lark.count(); lark.blockedHosts();   // several addresses (5.6)
 ```
 
 Settings > Connections renders one row per service (dot, label, copy, host,
@@ -389,7 +392,7 @@ the error dot.
   screen), on opening Settings if not awake, on returning to the tab when not
   fresh, before a load, before the login code exchange and before the redirect
   probe. Fresh for 60 s (up to 4 min for a single-purpose proxy).
-- Reference: `F: js/net.js` `wake`/`ping`. Open: Polaris skips the JSON
+- Reference: `F: js/net.js` `wake`/`check`. Open: Polaris skips the JSON
   content-type check and doesn't wake on opening Settings.
 
 ### 5.3 Requests, timeouts and retries
@@ -476,6 +479,39 @@ Reference: `P: js/errors.js` `describeLark` with the `BY_CODE` map and
 js/errors.js` `describe` + `describeWrite`, the `AlreadyDone` / `WriteBlocked`
 error classes, the delete variant and multi-host blocking. The shared module
 merges both (section 13).
+
+### 5.6 A service with a backup address
+
+A service may have several addresses, in order of preference. The shared Lark proxy
+has two: Cloudflare Workers first (it never sleeps), Render second (the backup). Both
+run the same code (`tech/lark-proxy`, 7.5), take the same settings and accept the
+same login tokens, so any call can go through either.
+
+- **One address in use at a time** (`url()`); `status.backup` says it isn't the first,
+  and Settings > Connections adds "(the backup: the usual one can't be reached)" to the
+  host. The choice lasts for the page: a reload starts from the first again.
+- **Waking** checks the address in use, then the others, in each round of the loop
+  (5.2), and keeps the first that is awake. A 503 (the Worker answers that when it's
+  misconfigured) or no answer means "try the next"; a 4xx, a wrong service or a
+  blocked address is dropped for that wake. Out of date counts only once no other
+  address might still wake up.
+- **Blocked** is per address: two instant failures move to the next address; the
+  service is `blocked` only when every address is, and the banner names them all.
+- **Reads** that can't reach the address in use (a network error, or 502/503/504)
+  move to the next one at once, at most once per address per call, before the usual
+  waits and retries.
+- **Anything sent once** (writes, uploads, the login exchange) is **never resent to
+  the other address**. Instead, if the service isn't fresh, it is woken (and maybe
+  swapped) **before** sending; nothing has left yet, so nothing can land twice. A
+  failure marks the service stale (`suspect()`), so the **next** call checks first.
+  A write that fails is still `uncertain` (5.3) and re-checked, never resent.
+- **Overrides** (Settings > Advanced, `?lark=`) replace the whole list with one
+  address: no backup while testing.
+- Every address is in the page's CSP `connect-src` (8.1), `check:proxy` checks each,
+  and preview shims answer every address's `GET /` (8.4).
+- Reference: `F:`/`S: js/net.js` `createService` (`check`, `failover`, `suspect`,
+  `ready`), `P: js/net.js` (`checkProxy`, `failover`, `useProxy`; same rules on its
+  `conn` object), each tool's `js/config.js` `SERVICES.lark.urls`.
 
 ---
 
@@ -776,9 +812,8 @@ do work the browser can't. Reference implementation: `fetch/render/gemini-pdf/`
 - Pages read limits (`max_upload_mb`, `max_files`) from `GET /` instead of copying
   them. Reference: `F: js/extract.js` `limits`.
 - Reference for the page side: `F: js/errors.js` `incompatible`, `P: js/service.js`
-  `serviceVerdict`. Open: `SERVICES.lark.min` is `""` in Fetch (the Lark proxy
-  reports no version yet, so only its `service` name can be checked) and
-  `"1.0.0"` in Polaris; make them the same once the proxy reports a version.
+  `serviceVerdict`. All three tools require the Lark proxy at `min: "2.0.0"`, the
+  first version that reports one.
 
 ### 7.3 CORS
 
@@ -823,22 +858,29 @@ too, and these rules:
   `authorization_code` grant). It **never** adds credentials to
   `tenant_access_token` / `app_access_token` requests, and has **no public
   `/token` endpoint**.
-- It forwards only to `open.larksuite.com` / `accounts.larksuite.com`.
+- It forwards only to the Lark API hosts (`ALLOWED_HOSTS`: `open.larksuite.com`,
+  `open.feishu.cn`).
 - It forwards `GET` and `POST`, passes `Authorization` through, and caps bodies at
   30 MiB (`MAX_BODY_BYTES`): room for Lark's 20 MiB one-shot upload (`LARK.maxUploadMb`).
-- Its source lives in this workspace and it reports `GET /` like any proxy
-  (`"service": "lark-cors-proxy"`, with a `version`).
+- Its source lives in this workspace (`tech/lark-proxy`, its own git repo) and it
+  reports `GET /` like any proxy (`"service": "lark-cors-proxy"`, with a `version`
+  and `runtime`).
+- **One JavaScript file, two hosts** (2.0.0): `src/proxy.js` holds every rule; Render
+  runs it through `server.js` (Node, Docker) and Cloudflare Workers runs it directly
+  (`wrangler.toml`). Both hosts get the same settings (`LARK_APP_ID`,
+  `LARK_APP_SECRET` as secrets, `ALLOWED_ORIGINS`, `ALLOWED_IPS`), so the tools can
+  use either (5.6). A Worker can't refuse to start, so with a missing or wrong
+  setting it answers 503 `"misconfigured"` to everything and logs why.
 - Admin scripts read `LARK_APP_ID` / `LARK_APP_SECRET` from the environment or a
   git-ignored `.env` (template `.env.example`), get a tenant token directly from
   `auth/v3/tenant_access_token/internal`, and call Lark directly; they never get
   tokens from the proxy. Reference: `F: tests/lark-node.mjs` (reads
   `tools/.env`), `P: tests/lark-node.mjs` (`credentials`, `tenantToken`,
   `makeCall`; reads `.env`), `F: tools/setup_lark_table.py`.
-- **Status (Oct 2026): open.** The live proxy still lists `/token` and adds the
-  secret to tenant-token requests, so anyone can get an app token that reads and
-  writes the Bases. No admin script depends on it any more; close it now. Its
-  source isn't in this workspace yet. `F: tests/check-proxy.mjs` fails while
-  `/token` is listed.
+- **Status (Nov 6, 2026): closed in 2.0.0.** `/token` is gone (410) and app or
+  tenant token requests never get the secret. `check:proxy` in every tool fails if
+  a proxy lists `/token` again. Still open: the app secret that was once committed
+  to the proxy's git history must be rotated (then set on both hosts).
 
 ---
 
@@ -920,7 +962,7 @@ Every tool has a dependency-free `package.json` with the same script names:
 | `serve` | the shared dev server on the tool's port |
 | `test` | offline tests of the pure modules, with fixtures from real Lark payloads and an in-memory fake Lark for the write paths |
 | `check:live` | read-only, against the configured tables: the schema check, plus building every payload the page would write and validating it against live options |
-| `check:proxy` | `GET /` of every service: version ≥ `min`, required headers allowed (and an `OPTIONS` preflight); fails if the Lark proxy lists `/token` |
+| `check:proxy` | `GET /` of every service, at every address (5.6): version ≥ `min`, required headers allowed (and an `OPTIONS` preflight); fails if the Lark proxy lists `/token` |
 | `check:shell` | import map lists every `js/*.js` and every import points at a listed module; shared assets (and `theme.css`) byte-identical to the design language, `js/session.js` to this skill's `assets/session.js`; watchdog, `main#main`, referrer and CSP metas present; `node --check` on every module; no secret-shaped strings in any publishable file; no em-dashes in UI strings |
 | `check:e2e` | writes to the **test copy only** (refuses unless `APP.env === "test"` and the test links are set): snapshot every field, do one of each write, redo each (expect "already done"), and assert the before/after diff is exactly the intended cells |
 | `setup` | the spec-driven setup/repair script, dry run by default |
