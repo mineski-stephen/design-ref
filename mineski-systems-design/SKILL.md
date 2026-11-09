@@ -90,9 +90,9 @@ export const SERVICES = {                                               // hoste
   // the shared Lark proxy runs in two places, tried in order (5.6): Cloudflare, then Render
   lark: { urls: ["https://lark-proxy.stephen-lin.workers.dev", "https://lark-proxy-dwiw.onrender.com"],
           service: "lark-cors-proxy", min: "2.0.0", headers: ["Authorization"] },
-  // a tool proxy, if any:
-  // gemini: { url: "https://gemini-pdf-6wp4.onrender.com", service: "gemini-brief-proxy", min: "1.4.0",
-  //           headers: ["Authorization", "X-Gemini-Api-Key"] },
+  // a tool proxy, if any (one address: `url`; with a backup: `urls`, in order):
+  // gemini: { urls: ["https://gemini-pdf.stephen-lin.workers.dev", "https://gemini-pdf-6wp4.onrender.com"],
+  //           service: "gemini-brief-proxy", min: "1.4.0", headers: ["Authorization", "X-Gemini-Api-Key"] },
 };
 export const LARK = {
   appId: "cli_aab0716138b8ded3", scopes: "bitable:app",
@@ -265,7 +265,7 @@ with one timer. Opening another tool, a new tab or a sharing link never asks aga
 
 ### 4.4 When a login ends
 
-- **Dead-token codes** (one shared set, also in `lark_auth.py`):
+- **Dead-token codes** (one shared set, also in `tech/gemini-pdf/src/lark-auth.js`):
   `20005, 99991661, 99991663, 99991668, 99991671, 99991677`
   (both `js/errors.js` `DEAD_TOKEN_CODES`).
 - The Lark client detects them centrally and fires the auth module's end
@@ -509,9 +509,18 @@ same login tokens, so any call can go through either.
   address: no backup while testing.
 - Every address is in the page's CSP `connect-src` (8.1), `check:proxy` checks each,
   and preview shims answer every address's `GET /` (8.4).
+- **A tool proxy's one job may be resent** when it writes nothing. Fetch's extraction
+  (`POST /extract`) goes to the other address when the one in use couldn't do the work
+  at all: no answer (which includes Cloudflare's own error page when a Worker runs out
+  of CPU or memory: it has no CORS headers), a 502/503/504 that isn't the service's
+  JSON, or the service's own `worker_limit`, `misconfigured` or `busy`. Never for
+  answers about the input, the login or the key. Before resending it wakes **only the
+  new address** (`wake({ stay: true })`), so it doesn't go back to the one that failed,
+  and the loader says "Switching to the backup…".
 - Reference: `F:`/`S: js/net.js` `createService` (`check`, `failover`, `suspect`,
-  `ready`), `P: js/net.js` (`checkProxy`, `failover`, `useProxy`; same rules on its
-  `conn` object), each tool's `js/config.js` `SERVICES.lark.urls`.
+  `ready`, `wake({ stay })`), `P: js/net.js` (`checkProxy`, `failover`, `useProxy`; same
+  rules on its `conn` object), each tool's `js/config.js` `SERVICES.lark.urls`,
+  `F: js/config.js` `SERVICES.gemini.urls` and `js/extract.js` `send` (`RESEND`).
 
 ---
 
@@ -749,20 +758,39 @@ Reference: `P: js/queue.js` (runner, peek, page), `js/inbox.js` `perform` /
 
 ---
 
-## 7. Tool proxies (Render)
+## 7. Tool proxies (Cloudflare and Render)
 
 A tool gets its own proxy only to hold a secret (an AI key, an app secret) or to
-do work the browser can't. Reference implementation: `fetch/render/gemini-pdf/`
-(v1.7.0).
+do work the browser can't. Reference implementation: `tech/gemini-pdf/` (v2.0.0,
+Fetch's extraction service).
+
+**One JavaScript file, two hosts** (as the Lark proxy, 7.5): `src/service.js` holds
+every rule and exports `createService(env, opts)` returning `(Request) => Response`.
+Cloudflare Workers runs it through `src/worker.js` (`wrangler.toml`; bundled text
+files like `prompt.md` via a `[[rules]] type = "Text"`), Render through `server.js`
+(Node in Docker). Settings come from `env` on both; `GET /` reports `runtime`. A
+Worker can't refuse to start, so a missing setting makes it answer 503
+`misconfigured` to every route, `GET /` included (so pages move on); Node exits.
+
+**Cloudflare's free plan** allows 10 ms of CPU and 50 outgoing calls per request
+(waiting on upstreams doesn't count). So on a Worker: never base64-encode or copy
+big files (send them by reference, e.g. Gemini's Files API, streaming the uploaded
+`File` as the body), parse uploads with `request.formData()`, count outgoing calls
+(`MAX_SUBREQUESTS`) and refuse up front with 503 `worker_limit` when a job can't
+fit, and let the page resend it to Render (5.6). Heavy work is better done in the
+browser before sending: Fetch compresses PDFs over 5 MB with Squeeze's engine
+(`tech/pdf-compress`, copied unedited into `fetch/squeeze/`, `check:shell` compares).
+In-memory limits and caches are per copy of the Worker, so approximate.
 
 ### 7.1 Shape
 
-- **One narrow job** ("extract a brief", not "call Gemini"). Python stdlib
-  (`ThreadingHTTPServer`, HTTP/1.1), no framework, a Dockerfile (non-root user,
-  `python:3.12-slim`, `COPY *.py <data files> ./` rather than a hand-kept file
-  list), `render.yaml`, offline unit tests with every upstream mocked.
+- **One narrow job** ("extract a brief", not "call Gemini"). Web-standard
+  JavaScript, no dependencies, no build step; a Dockerfile (`node:22-slim`, the
+  image's non-root `node` user, `COPY src ./src` with an allow-list
+  `.dockerignore`), `wrangler.toml`, `render.yaml`, offline tests (`node --test`)
+  with every upstream faked through an injected `fetch`.
 - **Order of checks per request**: origin → Lark login → limits → then read the body.
-- **Lark login check** (any proxy that accepts the user's token): `lark_auth.py`.
+- **Lark login check** (any proxy that accepts the user's token): `src/lark-auth.js`.
   It calls `user_info`, then probes one table the tool serves (`fields?page_size=1`),
   caches by SHA-256 of the token for 5 minutes, never caches failures, **fails
   closed**, and never logs headers or tokens. Answers `401 login_required |
@@ -846,8 +874,8 @@ the Gemini proxy still defaults `ALLOWED_ORIGINS` to `*` and sends
    one real action.
 8. Rollback: Render > Rollback; the page's `min` must not require the rolled-back version.
 
-Reference: `fetch/render/gemini-pdf/README.md` ("Deploy checklist", "Deployed
-from" line, still to be confirmed against Render) and `CHANGELOG.md`.
+Reference: `tech/gemini-pdf/README.md` ("Deploying", "Deploy checklist") and
+`CHANGELOG.md`. With two hosts, deploy and check both before raising a page's `min`.
 
 ### 7.5 The shared Lark proxy
 
@@ -983,7 +1011,7 @@ Every tool has a dependency-free `package.json` with the same script names:
   `tests/check-live.mjs`, `tests/e2e-core.js` + `e2e.html` (the e2e runs in the
   browser as the person, because the Lark app itself can't edit those Bases);
   `F: tests/fake-lark.mjs`, `tests/ops.test.mjs`, `tests/run-all.mjs`,
-  `render/gemini-pdf/tests/`.
+  `tech/gemini-pdf/tests/`.
 
 ---
 
@@ -1110,7 +1138,7 @@ newest first:
 - [ ] Uploads over XHR with progress, `bitablePerm`, size check; a failed upload stops the save and offers "Save without these files".
 - [ ] `describe(err)` covers the shared code table (with a coverage test).
 - [ ] Storage: `<tool>.*`, JSON only, caches dropped at session end, `LOCAL_KEYS` + Clear local data with Undo, dated migrations for renamed keys.
-- [ ] Proxy (if any): narrow job, `lark_auth.py`, limits, `GET /` standard, nested error JSON, CORS list tested, origins and max-age set, Dockerfile `COPY *.py`, CHANGELOG + "Deployed from".
+- [ ] Proxy (if any): narrow job, `lark-auth.js`, limits, `GET /` standard (with `runtime`), nested error JSON, CORS list tested, origins and max-age set, runs on Workers and Render (7), Dockerfile copies `src/`, CHANGELOG.
 - [ ] Dev: registered `127.0.0.1` port, the shared `tools/serve.py`, `package.json` scripts, `check:shell` passes, `.env.example` committed.
 - [ ] Tests: offline pure-logic tests with a fake Lark, `check:live`, `check:proxy`, `?preview`, e2e on a test copy.
 - [ ] README per section 11.
@@ -1141,7 +1169,7 @@ what to merge in from the other tool.
 | `tools/serve.py` | the dev server | **done**: `mineski-design-language/tools/serve.py` | — |
 | `tools/check-shell.mjs`, `tools/check-proxy.mjs` | 8.4 | Polaris `tools/` | Fetch: the em-dash and `/token` checks, every service in `SERVICES` |
 | Preview shim core | 8.4 | Polaris `tests/preview-shim.js` | XHR interception for uploads |
-| `lark_auth.py` (server) | `LarkAuth(base_token, table_id, required, ttl).verify(header)` | Fetch `render/gemini-pdf/lark_auth.py` | make the tool name in its messages a parameter |
+| `lark-auth.js` (server) | `new LarkAuth({ baseToken, tableId, required, ttlSeconds }).verify(header)` | `tech/gemini-pdf/src/lark-auth.js` | make the tool name in its messages a parameter |
 
 Each tool keeps only its domain modules (Fetch: brief model, row mapping, the
 document, sources and evidence; Polaris: the transfer rules, inbox, tables), its
