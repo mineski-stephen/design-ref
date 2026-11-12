@@ -16,6 +16,8 @@ and desktop**, and with the **keyboard only**.
 - [ ] One primary button per view; repeated item actions are tonal.
 - [ ] Hash routes; Back works; reload lands in the same place; title updates per view.
 - [ ] Widths and breakpoints as in `typography-and-layout.md`; no horizontal scroll at 375px.
+- [ ] One hero card per view, nothing stacked directly under it; no ghost button alone at the start of a row.
+- [ ] A side panel taller than the window can be scrolled to its end without scrolling the whole page down.
 
 ## Family consistency (compare with Fetch at the same window width)
 Open this tool and Fetch side by side at 1600px and at 375px. Small mismatches
@@ -67,12 +69,15 @@ here are what make tools feel like strangers.
 - [ ] Dialogs are `<dialog>` with focus on the safe choice; Escape closes; toasts usable while a dialog is open.
 - [ ] Menus: arrows, Escape, close on outside click / scroll / resize / navigation.
 - [ ] No interactive element nested inside another (no button inside a link).
+- [ ] Every `id` in `index.html` is used once (`npm run check:shell` checks): a label, heading and field sharing an id silently breaks the field.
+- [ ] Back links are `<a class="back">` and only navigate; nothing that discards work looks like Back.
+- [ ] At 375px with every nav link showing (logged in, a record open), the avatar is still on screen.
 - [ ] Icon-only buttons have `aria-label` and `title`; decorative icons are `aria-hidden`.
 - [ ] Inputs, selects and API-key fields 16px on phones; tap targets ≥32px; hover-only affordances partly visible on touch.
 - [ ] Choice chips and segmented controls: `role="radiogroup"` with `radioKeys()` (arrow keys work).
 - [ ] AA contrast in both themes, including toasts, menus, badges, disabled hints.
 - [ ] Reduced motion: no movement except slow spinners; confetti skipped.
-- [ ] Print / PDF output is light and contains only the content.
+- [ ] Print / PDF output is light and contains only the content, and Ctrl+P gives the same result as the page's own button.
 
 ## Hand-over
 - [ ] README for the team, including a troubleshooting table of real messages.

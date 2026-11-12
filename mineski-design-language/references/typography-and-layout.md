@@ -78,13 +78,14 @@ There's no numeric spacing scale; the systems use a small set of recurring value
 | ------- | --------- |
 | Page (top bar and every view) | 1200px (`--maxw`). Never change `--maxw` in a tool: the top bar is sized from it, so a wider value makes that tool's top bar wider than the others'. |
 | Side-by-side workspace (≥1280px only) | up to 1600px, set on that view's `main` only (`main:has(.workspace.active) { max-width: 1600px; }`). The one view allowed past 1200px, because the destination table needs the room; the top bar stays at 1200px. |
+| A wide document view (a quotation, a sheet with many columns) | up to 1480px (`--maxw-doc`): give the view the class `wide` (`<section class="view wide">`) and the base widens `main` for it. The top bar stays at 1200px. Use it only when the document's own columns need the room. |
 | A single task (upload box, compose) | 820px (`.mid`) |
 | Settings | 720px (`.settings`), **left-aligned** under the brand, never centered |
 | A single column of work items | 760px (`.narrow`) |
 | Big loader card | 540px |
 | Login card | 440px |
 | Dialog | 520px (`.modal.wide` 640px); a paired sheet (`.modal.pair`) up to 1120px: form 500px + row document |
-| Record + side panel | `minmax(0, 1fr) 320px`, 28px gap (`.split`) |
+| Record + side panel | `minmax(0, 1fr) 320px`, 28px gap (`.split`). The panel is sticky and scrolls by itself when it is taller than the window. A tool may narrow the panel or stack it sooner when its document needs the width. |
 | Card grid | `repeat(auto-fill, minmax(290px, 1fr))`, 16px gap (`.grid`) |
 
 ### Navigation
@@ -105,9 +106,11 @@ There's no numeric spacing scale; the systems use a small set of recurring value
   header under it sits at `calc(var(--topbar) + 8px + var(--tabs-h) + 6px)`,
   never a hard-coded number. Tabs are links with `aria-current="page"`.
 - The brand (mark + name) links home. On ≤420px the name hides; the mark carries the brand.
+  With two or more text links in the nav it hides at ≤560px, with the session pill.
 - A **Back** link (`.back`) belongs on a *detail* view (one record), naming
-  where it goes ("All briefs"). Settings has **no** Back link: it is a nav
-  destination, and the nav is the way back.
+  where it goes ("All briefs"). It is an `<a href>` and **only navigates**: it never
+  discards, resets or starts anything (that is a button with its own label, and an Undo).
+  Settings has **no** Back link: it is a nav destination, and the nav is the way back.
 
 ### Breakpoints
 
@@ -117,7 +120,7 @@ There's no numeric spacing scale; the systems use a small set of recurring value
 | ≤1024px | `.split` side panel stacks under the content |
 | ≤720px | Tables become stacked rows with `data-label`s |
 | ≤640px | Top bar 56px; dialogs become bottom sheets with full-width buttons; page tools go full width; a document view may move its main actions to a fixed bottom bar |
-| ≤560px | Tab strips scroll sideways (the page never does) |
+| ≤560px | Tab strips scroll sideways (the page never does); with two or more text links in the nav, the brand name and session pill hide |
 | ≤420px | Brand name hides; session pill hides; long button labels swap to `.label-short` |
 | `(hover: none)` | ⋯ buttons and drag handles show at 45-70% opacity; no hover transforms |
 

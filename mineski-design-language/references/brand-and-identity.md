@@ -18,7 +18,7 @@ the wheel so tools are told apart at a glance in a browser's tab bar.
 | --- | ----- | ------------- | ------ | ---- |
 | Yellow (Mineski yellow) | `#FFC800` | dark ink | **taken** | Fetch |
 | Indigo | `#4B3FE0` | white | **taken** | Polaris |
-| Teal | `#0B7D6E` | white | free: `assets/themes/slot-teal.css` | |
+| Teal | `#0B7D6E` | white | **taken** | Appraisal |
 | Berry | `#C2256F` | white | **taken** | Suppliers |
 | Tangerine | `#FF8A3D` | dark ink | free: `assets/themes/slot-tangerine.css` | |
 | Red, green | - | - | **never** (read as danger / success) | |

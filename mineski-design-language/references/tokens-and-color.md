@@ -109,7 +109,10 @@ and the 4 px brand band on a hovered record card).
   and don't use the brand for a warning. Brands may not be red or green
   (they'd read as danger or success); the generator warns.
 - **Printed/PDF output stays light**, and a shareable "paper" document (Fetch's
-  brief) may stay white in dark mode, with its own `--p-*` tokens.
+  brief) may stay white in dark mode, with its own `--p-*` tokens. A client document that
+  follows a company layout (Appraisal's quotation) may also carry that layout's colours, as
+  tokens declared once on the paper's root class and used only inside it (see "The shareable
+  document" in `components.md`). This is the one exception to "tokens from the theme only".
 - **Contrast**: body text ≥ 7:1 on bg; muted ≥ 4.5:1 on bg and surface-2; text
   on brand ≥ 4.5:1; focus ring ≥ 3:1. Run the generator's report after any change.
 - **Selection** uses the brand at about 32% (`::selection`).

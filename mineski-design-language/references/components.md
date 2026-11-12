@@ -22,7 +22,7 @@ Every component lives in `assets/mineski-base.css`; behavior helpers live in
 | `.btn-primary` | The one main action of the view | **One per view.** Brand fill, brand shadow |
 | `.btn` (default) | Secondary actions | White/surface with a line border |
 | `.btn-tonal` | The repeated main action on many list items (Polaris "Push") | Avoids a wall of brand fills |
-| `.btn-ghost` | Cancel, Ignore, Discard, low-emphasis actions | No border until hover |
+| `.btn-ghost` | Cancel, Ignore, Discard, low-emphasis actions | No border until hover. Its text sits 16px in from its box, so it never starts a row on its own under a card's text (it would look indented): put it beside a bordered button, or use a plain `.btn`. |
 | `.btn-danger` | Only the confirm button in a delete dialog | Never on a page or card |
 | `.btn-sm` / `.btn-lg` | Toolbars & rows / the landing CTA and login | 32px / 40px / 48px tall |
 | `.btn-block` | Stacked actions in a side panel | Left-aligned icon + label |
@@ -96,6 +96,14 @@ opens a further step ("Delete…").
   shadow, no border).
 - `.card-head` (title + right-aligned pill or button), `.card-sub` for one line of explanation.
 - Don't nest cards. Inside a card use `.summary-list`, `--surface-2` insets, or dividers.
+- **One hero card per view, with nothing stacked directly under it.** A `.hero-card` (28px
+  radius, 22px padding) above a `.card` (20px, 18px) reads as a mistake. Optional parts of the
+  task go *inside* the hero card, under a rule, as `<details class="more">`.
+- **A card that opens and closes** is `<details class="card card-pad disclosure">` with a
+  `<summary class="subhead">`: the family's chevron, never the browser's triangle. (`.more`,
+  `.advanced` and `.done-group` keep their own looks for their own jobs.)
+- **Label / figure pairs** in a side panel are `<dl class="kv">`. `.facts` is for record cards
+  only (two columns, clamped to two lines); don't reuse it elsewhere.
 
 ## Badges, pills, identifiers
 
@@ -294,13 +302,15 @@ is in the Universe. Nice work!".
   **`.btn.btn-sm`** ("Wake up", "Try again", "Refresh"). Plain, not tonal or
   ghost: tonal is reserved for a repeated action on list items.
 - **Advanced**: `<details class="advanced">` (localhost only).
-- **This browser**: a ghost "Clear local data" with one sentence on what is and isn't cleared.
+- **This browser**: a plain `.btn` "Clear local data" with one sentence on what is and isn't cleared
+  (not ghost: alone in its row, a ghost button's text sits indented from the card's text).
 
 ## Top bar parts
 
 Left: `.brand` (mark + name + `.brand-ver` + `.env`). `.brand-ver` is the
 running version ("v1.0.0", muted, filled from `APP.version`); it stays beside the
-mark on small phones, where the name hides. Right (`.top-right`), always in this
+mark on small phones, where the name hides (at 420px, or already at 560px when the nav has two
+or more text links, so the avatar is never pushed off the screen). Right (`.top-right`), always in this
 order: `.override-badge` · `.nav` (destinations, then the gear `.nav-icon`) ·
 `.session-pill` (clock + `fmt.duration`, e.g. "1h 42m", `.is-low` amber under 10
 minutes, links to Settings, `aria-label` "Logged in for 1h 42m more, until 4:30
@@ -317,3 +327,14 @@ markers in the brand, label/value tables on a faint label column, and a quiet
 footer. Text is editable in place (`.ed`: brand-tinted hover, brand ring on
 focus, italic placeholder when empty). See `templates/starter/css/app.css` `.doc`
 for the themed version and Fetch's `.paper` for the always-white one.
+
+**A client document that follows a company layout** (Appraisal's quotation, drawn like Mineski's
+signed quotations) is also an always-white paper, but its look comes from that layout, not from
+the tool's brand: its colours are a small palette of its own, declared once on the paper's root
+class (`.quote { --q-navy: …; --q-gold: … }`) and used nowhere else. The page around it stays on
+tokens. Such a view may be wide (`.view.wide`, see Widths), and:
+- what the client must never see carries `.internal` / `.no-print` and is hidden in print;
+- blank fields print as nothing (no placeholders), and a row that is only a blank field goes;
+- Ctrl+P must give the same PDF as the "Save as PDF" button: prepare the page in a
+  `beforeprint` listener, not in the button's handler;
+- bands and fills need `print-color-adjust: exact`; signature blocks get `break-inside: avoid`.
